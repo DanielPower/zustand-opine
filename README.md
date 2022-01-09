@@ -8,7 +8,7 @@ https://codesandbox.io/s/zustand-namedslices-5qkke?file=/src/App.js
 
 ```js
 import create from "zustand";
-import nameslices from "nameslices";
+import namedslices from "zustand-namedslices";
 import { devtools } from "zustand/middleware";
 
 const MAX_FISH = 20;
@@ -48,10 +48,25 @@ const fishSlice = {
 
 const useStore = create(
   devtools(
-    nameslices({
+    namedslices({
       bearSlice,
       fishSlice,
     })
   )
 );
+```
+
+### Add named slices to existing store
+
+```js
+const useStore = create(
+  devtools((set, get) => ({
+    honey: 0,
+    honeyBees: 5,
+    produceHoney: (prev) => set({
+      honey: prev.honey + prev.honeyBees,
+    }),
+    ...namedslices(set, get)({ bearSlice, fishSlice }),
+  }))
+)
 ```
