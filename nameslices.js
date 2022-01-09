@@ -17,16 +17,16 @@ const localGet = (get, slice) => () => get()[slice];
 
 const nameslices = (slices) => (set, get) =>
   Object.fromEntries(
-    slices.map((slice) => [
-      slice.name,
+    Object.entries(slices).map(([name, slice]) => [
+      name,
       {
         ...Object.fromEntries(
           Object.entries(slice.actions).map(([key, action]) => [
             key,
             action({
-              set: localSet(set, slice.name, `${slice.name}/${key}`),
-              globalSet: globalSet(set, `${slice.name}/${key}`),
-              get: localGet(get, slice.name),
+              set: localSet(set, name, `${name}/${key}`),
+              globalSet: globalSet(set, `${name}/${key}`),
+              get: localGet(get, name),
               globalGet: get,
             }),
           ])
