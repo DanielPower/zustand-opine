@@ -1,5 +1,5 @@
 {
-  "name": "nameslices",
+  "name": "namedslices",
   "version": "0.0.1",
   "description": "Named slices with slice-scoped set function for Zustand",
   "main": "nameslices.js",
@@ -11,5 +11,8 @@
     "url": "github.com/danielpower/nameslices"
   },
   "author": "Daniel Power",
-  "license": "ISC"
+  "license": "MIT",
+  "dependencies": {
+    "zustand": "^3.6.8"
+  }
 }
