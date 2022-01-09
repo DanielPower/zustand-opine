@@ -1,6 +1,10 @@
-# Usage
+# Namespaced slices for Zustand, with automatic action names for Redux Dev Tools
 
-WIP more docs to come
+## Demo
+
+https://codesandbox.io/s/zustand-namedslices-5qkke?file=/src/App.js
+
+## Example
 
 ```js
 import create from "zustand";
