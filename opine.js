@@ -18,27 +18,29 @@ const localSet = (set, slice, key) => (stateCallback, replace) =>
 
 const localGet = (get, slice) => () => get()[slice];
 
-export const opineMiddleware = (slices) => (set, get) =>
-  Object.fromEntries(
-    Object.entries(slices).map(([name, slice]) => [
-      name,
-      {
-        ...Object.fromEntries(
-          Object.entries(slice.actions).map(([key, action]) => [
-            key,
-            action({
-              set: localSet(set, name, { name: `${name}/${key}` }),
-              globalSet: globalSet(set, { name: `${name}/${key}` }),
-              get: localGet(get, name),
-              globalGet: get,
-            }),
-          ])
-        ),
-        ...slice.initialState,
-      },
-    ])
+export const opine = (slices) =>
+  zustand(
+    devtools((set, get) =>
+      Object.fromEntries(
+        Object.entries(slices).map(([name, slice]) => [
+          name,
+          {
+            ...Object.fromEntries(
+              Object.entries(slice.actions).map(([key, action]) => [
+                key,
+                action({
+                  set: localSet(set, name, `${name}/${key}`),
+                  globalSet: globalSet(set, `${name}/${key}`),
+                  get: localGet(get, name),
+                  globalGet: get,
+                }),
+              ])
+            ),
+            ...slice.initialState,
+          },
+        ])
+      )
+    )
   );
-
-const opine = (slices) => zustand(devtools(opineMiddleware(slices)));
 
 export default opine;
