@@ -1,8 +1,8 @@
 {
-  "name": "zustand-namedslices",
+  "name": "zustand-opine",
   "version": "0.0.1",
-  "description": "Named slices with slice-scoped set function for Zustand",
-  "main": "namedslices.js",
+  "description": "An opinionated Zustand store for namespaced slices",
+  "main": "opine.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

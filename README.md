@@ -1,4 +1,10 @@
-# Namespaced slices for Zustand, with automatic action names for Redux Dev Tools
+# Zustand Opine
+
+transitive verb
+
+To _state_ as an opinion
+
+An opinionated Zustand store for namespaced slices.
 
 ## Demo
 
@@ -7,9 +13,7 @@ https://codesandbox.io/s/zustand-namedslices-5qkke?file=/src/App.js
 ## Example
 
 ```js
-import create from "zustand";
-import namedslices from "zustand-namedslices";
-import { devtools } from "zustand/middleware";
+import opine from "zustand-opine";
 
 const MAX_FISH = 20;
 
@@ -46,27 +50,29 @@ const fishSlice = {
   },
 };
 
-const useStore = create(
-  devtools(
-    namedslices({
-      bearSlice,
-      fishSlice,
-    })
-  )
-);
+const useStore = opine({
+  bearSlice,
+  fishSlice,
+});
 ```
 
 ### Add named slices to existing store
 
 ```js
-const useStore = create(
-  devtools((set, get) => ({
-    honey: 0,
-    honeyBees: 5,
-    produceHoney: (prev) => set({
-      honey: prev.honey + prev.honeyBees,
-    }),
-    ...namedslices(set, get)({ bearSlice, fishSlice }),
-  }))
+import create from 'zustand';
+import { opineMiddleware } from 'zustand-opine';
+import bearSlice from './bearSlice';
+import fishSlice from './fishSlice';
+
+const useStore = create((set, get) =>
+  honey: 0,
+  honeyBees: 5,
+  produceHoney: (prev) => set({
+    honey: prev.honey + prev.honeyBees,
+  }),
+  ...opineMiddleware(set, get)({
+    bearSlice, 
+    fishSlice
+  }),
 )
 ```

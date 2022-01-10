@@ -1,3 +1,6 @@
+import zustand from "zustand";
+import { devtools } from "zustand/middleware";
+
 const globalSet = (set, key) => (stateCallback, replace) =>
   set(stateCallback, replace, key);
 
@@ -15,7 +18,7 @@ const localSet = (set, slice, key) => (stateCallback, replace) =>
 
 const localGet = (get, slice) => () => get()[slice];
 
-const nameslices = (slices) => (set, get) =>
+export const opineMiddleware = (slices) => (set, get) =>
   Object.fromEntries(
     Object.entries(slices).map(([name, slice]) => [
       name,
@@ -24,8 +27,8 @@ const nameslices = (slices) => (set, get) =>
           Object.entries(slice.actions).map(([key, action]) => [
             key,
             action({
-              set: localSet(set, name, `${name}/${key}`),
-              globalSet: globalSet(set, `${name}/${key}`),
+              set: localSet(set, name, { name: `${name}/${key}` }),
+              globalSet: globalSet(set, { name: `${name}/${key}` }),
               get: localGet(get, name),
               globalGet: get,
             }),
@@ -36,4 +39,6 @@ const nameslices = (slices) => (set, get) =>
     ])
   );
 
-export default nameslices;
+const opine = (slices) => zustand(devtools(opineMiddleware(slices)));
+
+export default opine;
