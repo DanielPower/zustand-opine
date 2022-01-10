@@ -2,7 +2,7 @@
   "name": "zustand-opine",
   "version": "0.0.1",
   "description": "An opinionated Zustand store for namespaced slices",
-  "main": "opine.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -13,6 +13,7 @@
   "author": "Daniel Power",
   "license": "MIT",
   "dependencies": {
+    "immer": "^9.0.7",
     "zustand": "^3.6.8"
   }
 }
