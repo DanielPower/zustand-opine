@@ -31,7 +31,7 @@ const slicedState = (slices) => (set, get, api) => {
   Object.entries(slices).forEach(([sliceKey, slice]) => {
     Object.entries(slice.actions).forEach(([actionKey, action]) => {
       if (typeof api.actions[actionKey] !== "undefined") {
-        throw new Error(`Duplicate action with name '${name}' created`);
+        throw new Error(`Duplicate action with name '${actionKey}' created`);
       }
       api.actions[actionKey] = createAction(actionKey, action, set, get, api);
       initialState[sliceKey] = slice.initialState;
