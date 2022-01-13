@@ -29,11 +29,15 @@ const slicedState = (slices) => (set, get, api) => {
   api.actions = {};
   const initialState = {};
   Object.entries(slices).forEach(([sliceKey, slice]) => {
+    api.actions[sliceKey] = {};
     Object.entries(slice.actions).forEach(([actionKey, action]) => {
-      if (typeof api.actions[actionKey] !== "undefined") {
-        throw new Error(`Duplicate action with name '${actionKey}' created`);
-      }
-      api.actions[actionKey] = createAction(actionKey, action, set, get, api);
+      api.actions[sliceKey][actionKey] = createAction(
+        `${sliceKey}/${actionKey}`,
+        action,
+        set,
+        get,
+        api
+      );
       initialState[sliceKey] = slice.initialState;
     });
   });

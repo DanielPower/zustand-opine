@@ -1,5 +1,7 @@
 # Zustand Opine
 
+**Not ready for use yet. API still very much in _flux_**
+
 ## Opine Definition
 
 transitive verb
