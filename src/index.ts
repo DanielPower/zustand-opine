@@ -11,34 +11,45 @@ export type OpineState<TStore extends object> = {
 	[K in keyof TStore]: TStore[K] extends { initialState: infer U } ? U : never;
 };
 
-export interface OpineApi<TStore extends object> extends StoreApi<TStore> {
-	actions: Record<string, Record<string, Function>>;
+export type OpineActions<TStore extends object> = {
+	[K in keyof TStore]: TStore[K] extends { actions: infer U } ? U : never;
+};
+
+export interface OpineApi<TState extends object, TActions extends object>
+	extends StoreApi<TState> {
+	actions: TActions;
 }
 
-const createAction = <TStore extends Record<string, any>>(
+const createAction = <TState extends object, TActions extends object>(
 	name: string,
-	action: Function,
-	set: NamedSet<TStore>,
-	get: GetState<TStore>,
-	api: StoreApi<TStore>
+	action: (
+		set: NamedSet<TState>,
+		get: GetState<TState>,
+		api: StoreApi<TState>
+	) => Function,
+	set: NamedSet<TState>,
+	get: GetState<TState>,
+	api: OpineApi<TState, TActions>
 ) =>
 	action(
-		(prev: TStore, replace: boolean) => set(prev, replace, name),
+		(prev: TState, replace: boolean) => set(prev, replace, name),
 		get,
 		api
 	);
 
 const structuredStore =
-	<TStore extends Record<string, Slice>>(slices: Record<string, Slice>) =>
+	<TState extends object, TActions extends object>(
+		slices: Record<string, Slice>
+	) =>
 	(
-		set: NamedSet<TStore>,
-		get: GetState<TStore>,
-		api: OpineApi<TStore>
-	): OpineState<TStore> => {
-		api.actions = {};
+		set: NamedSet<TState>,
+		get: GetState<TState>,
+		api: OpineApi<TState, TActions>
+	): OpineState<TState> => {
+		const actions = {};
 		const state = {};
 		Object.entries(slices).forEach(([sliceKey, slice]) => {
-			api.actions[sliceKey] = {};
+			actions[sliceKey] = {};
 			Object.entries(slice.actions).forEach(([actionKey, action]) => {
 				api.actions[sliceKey][actionKey] = createAction(
 					`${sliceKey}/${actionKey}`,
@@ -50,17 +61,22 @@ const structuredStore =
 			});
 			state[sliceKey] = slice.initialState;
 		});
-		return state as OpineState<TStore>;
+		api.actions = actions as TActions;
+		return state as OpineState<TState>;
 	};
 
 const createStore = <TStore extends Record<string, any>>(
 	slices: Record<string, Slice>,
 	devtoolsOptions = {} // TODO add typing
 ) => {
-	type ActualStore = OpineState<TStore>;
-	return zustand<ActualStore>(
-		devtools(immer(structuredStore<TStore>(slices)), devtoolsOptions)
-	);
+	type State = OpineState<TStore>;
+	type Actions = OpineActions<TStore>;
+	return zustand<
+		State,
+		SetState<State>,
+		GetState<State>,
+		OpineApi<State, Actions>
+	>(devtools(immer(structuredStore<State, Actions>(slices)), devtoolsOptions));
 };
 
 export default createStore;
