@@ -2,7 +2,7 @@
   "name": "zustand-opine",
   "version": "0.0.6",
   "description": "An opinionated Zustand store for namespaced slices",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -14,6 +14,7 @@
   "license": "MIT",
   "dependencies": {
     "immer": "^9.0.7",
+    "typescript": "^4.5.5",
     "zustand": "^3.6.8"
   }
 }
