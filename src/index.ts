@@ -58,18 +58,8 @@ const createStore = <TStore extends Record<string, any>>(
 	devtoolsOptions = {} // TODO add typing
 ) => {
 	type ActualStore = OpineState<TStore>;
-	return zustand<
-		ActualStore,
-		SetState<ActualStore>,
-		GetState<ActualStore>,
-		OpineApi<ActualStore>
-	>(
-		immer<
-			ActualStore,
-			SetState<ActualStore>,
-			GetState<ActualStore>,
-			OpineApi<ActualStore>
-		>(structuredStore<TStore>(slices))
+	return zustand<ActualStore>(
+		devtools(immer(structuredStore<TStore>(slices)), devtoolsOptions)
 	);
 };
 
