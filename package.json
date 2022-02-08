@@ -2,7 +2,7 @@
 	"name": "zustand-opine",
 	"version": "0.0.6",
 	"description": "An opinionated Zustand store for namespaced slices",
-	"main": "dist/index.js",
+	"main": "src/index.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
