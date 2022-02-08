@@ -32,9 +32,9 @@ const parseSlices = (slices) => {
 	const actions = {};
 	const selectors = {};
 	Object.entries(slices).forEach(([key, slice]) => {
-		initialState[key] = slice.initialState;
-		actions[key] = slice.actions;
-		selectors[key] = slice.selectors;
+		initialState[key] = slice.initialState || {};
+		actions[key] = slice.actions || {};
+		selectors[key] = slice.selectors || {};
 	});
 	return { initialState, actions, selectors };
 };

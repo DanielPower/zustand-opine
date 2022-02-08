@@ -1,6 +1,6 @@
 {
 	"name": "zustand-opine",
-	"version": "0.0.7",
+	"version": "0.0.8",
 	"description": "An opinionated Zustand store for namespaced slices",
 	"main": "src/index.js",
 	"scripts": {
