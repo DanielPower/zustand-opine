@@ -1,6 +1,17 @@
 import zustand from "zustand";
 import { devtools } from "zustand/middleware";
-import immer from "./middleware/immer";
+import produce from "immer";
+
+const immer = (config) => (set, get, api) =>
+	config(
+		(partial, replace) => {
+			const nextState =
+				typeof partial === "function" ? produce(partial) : partial;
+			return set(nextState, replace);
+		},
+		get,
+		api
+	);
 
 const createSelectors = (store) => {
 	store.use = {};
