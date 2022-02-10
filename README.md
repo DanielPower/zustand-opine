@@ -1,6 +1,6 @@
 # Zustand Opine
 
-**Not ready for use yet. API still very much in _flux_**
+Ready for light use. Some API changes may still occur. Mainly want to get linting/testing in CI, and rewrite in Typescript before calling it 1.0.0.
 
 Goals for 1.0.0
 - [x] Structured store, with each slice being split up into `initialState`, `actions`, `selectors`
