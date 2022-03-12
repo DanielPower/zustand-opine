@@ -1,9 +1,11 @@
+import produce, { enableMapSet } from "immer";
 import zustand from "zustand";
-import { devtools } from "zustand/middleware";
-import produce from "immer";
+import { devtools, subscribeWithSelector } from "zustand/middleware";
+import shallow from "zustand/shallow";
 
-const immer = (config) => (set, get, api) =>
-	config(
+const immer = (config) => (set, get, api) => {
+	enableMapSet();
+	return config(
 		(partial, replace) => {
 			const nextState =
 				typeof partial === "function" ? produce(partial) : partial;
@@ -12,72 +14,127 @@ const immer = (config) => (set, get, api) =>
 		get,
 		api
 	);
+};
 
-const createSelectors = (store) => {
-	store.use = {};
-	Object.keys(store.getState()).forEach((sliceKey) => {
-		store.use[sliceKey] = {};
-		store.use[sliceKey].all = () => store((state) => state[sliceKey]);
-		Object.entries(store.selectors[sliceKey]).forEach(
-			([selectorKey, selector]) => {
-				store.use[sliceKey][selectorKey] = () => store(selector);
-			}
-		);
-	});
+// Creates subscriptions to automatically update query parameter values when query param
+// state changes.
+const createQueryParamSubscriptions = (store) => {
+	store.subscribe(
+		(state) =>
+			Object.values(store.queryParams).map((paramDetails) =>
+				paramDetails.selector(state)
+			),
+		() => {
+			const state = store.getState();
+			const urlParams = new URLSearchParams(window.location.search);
+			Object.entries(store.queryParams).forEach(([urlKey, paramDetails]) => {
+				const value = paramDetails.selector(state);
+				if (value && value !== paramDetails.initial) {
+					urlParams.set(urlKey, paramDetails.serialize(value));
+				} else {
+					urlParams.delete(urlKey);
+				}
+			});
+			window.history.replaceState(
+				null,
+				"",
+				`${window.location.pathname}?${urlParams}`
+			);
+		},
+		{ equalityFn: shallow }
+	);
 	return store;
 };
 
-const parseSlices = (slices) => {
-	const initialState = {};
-	const actions = {};
-	const selectors = {};
-	Object.entries(slices).forEach(([key, slice]) => {
-		initialState[key] = slice.initialState || {};
-		actions[key] = slice.actions || {};
-		selectors[key] = slice.selectors || {};
-	});
-	return { initialState, actions, selectors };
+// Inverts the slices so that the keys initialState, actions, etc. are at the root,
+// and slice keys are under each of those.
+const parseSlices = (slices) =>
+	Object.fromEntries(
+		["initialState", "actions", "queryParams", "selectors"].map(
+			(propertyKey) => [
+				propertyKey,
+				Object.fromEntries(
+					Object.entries(slices).map(([sliceKey, slice]) => [
+						sliceKey,
+						slice[propertyKey] || {},
+					])
+				),
+			]
+		)
+	);
+
+const apiActions = (config, actionSlices) => (set, get, api) => {
+	api.actions = Object.fromEntries(
+		Object.entries(actionSlices).map(([sliceKey, actions]) => [
+			sliceKey,
+			Object.fromEntries(
+				Object.entries(actions).map(([actionKey, action]) => [
+					actionKey,
+					action(
+						(reducer, actionName = null) =>
+							set(reducer, false, `${sliceKey}/${actionName ?? actionKey}`),
+						get,
+						api
+					),
+				])
+			),
+		])
+	);
+	return config(set, get, api);
 };
 
-const apiActions = (config, actionSlices) => {
+const apiQueryParams = (config, queryParamSlices) => {
+	const initialQueryParams = new URLSearchParams(window.location.search);
 	return (set, get, api) => {
-		api.actions = {};
-		Object.entries(actionSlices).forEach(([sliceKey, actions]) => {
-			api.actions[sliceKey] = {};
-			Object.entries(actions).forEach(([actionKey, action]) => {
-				api.actions[sliceKey][actionKey] = action(
-					(prevState) => set(prevState, false, `${sliceKey}/${actionKey}`),
-					get,
-					api
-				);
+		const initialState = config(set, get, api);
+		api.queryParams = {};
+		Object.entries(queryParamSlices).forEach(([sliceKey, slice]) => {
+			Object.entries(slice).forEach(([storeKey, paramDetails]) => {
+				api.queryParams[paramDetails.key] = {
+					...paramDetails,
+					initial: initialState[sliceKey][storeKey],
+					selector: (state) => state[sliceKey][storeKey],
+				};
+				const paramValue = initialQueryParams.get(paramDetails.key);
+				initialState[sliceKey][storeKey] =
+					paramValue === null
+						? initialState[sliceKey][storeKey]
+						: paramDetails.deserialize(paramValue);
 			});
 		});
-		return config(set, get, api);
+		return initialState;
 	};
 };
 
-const apiSelectors = (config, selectorSlices) => {
-	return (set, get, api) => {
-		api.selectors = {};
-		Object.entries(selectorSlices).forEach(([sliceKey, selectors]) => {
-			api.selectors[sliceKey] = {};
-			Object.entries(selectors).forEach(([selectorKey, selector]) => {
-				api.selectors[sliceKey][selectorKey] = selector;
-			});
-		});
-		return config(set, get, api);
-	};
+const apiSelectors = (config, selectorSlices) => (set, get, api) => {
+	api.selectors = selectorSlices;
+	return config(set, get, api);
 };
 
+// TODO Consider importing ramda pipe to simplify middleware inclusion
 const createStore = (slices) => {
-	const { initialState, actions, selectors } = parseSlices(slices);
-	return createSelectors(
+	const { initialState, actions, queryParams, selectors } = parseSlices(slices);
+	return createQueryParamSubscriptions(
 		zustand(
-			immer(
-				devtools(
-					apiActions(
-						apiSelectors(() => initialState, selectors),
-						actions
+			subscribeWithSelector(
+				immer(
+					devtools(
+						apiSelectors(
+							apiQueryParams(
+								apiActions(() => initialState, actions),
+								queryParams
+							),
+							selectors
+						),
+						{
+							trace: true,
+							features: {
+								pause: true,
+								lock: true,
+								jump: true,
+								skip: true,
+							},
+						}
 					)
 				)
 			)
