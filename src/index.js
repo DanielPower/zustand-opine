@@ -2,6 +2,7 @@ import produce, { enableMapSet } from "immer";
 import zustand from "zustand";
 import { devtools, subscribeWithSelector } from "zustand/middleware";
 import shallow from "zustand/shallow";
+import pipe from "ramda/es/pipe";
 
 const immer = (config) => (set, get, api) => {
 	enableMapSet();
@@ -111,35 +112,18 @@ const apiSelectors = (config, selectorSlices) => (set, get, api) => {
 	return config(set, get, api);
 };
 
-// TODO Consider importing ramda pipe to simplify middleware inclusion
 const createStore = (slices) => {
 	const { initialState, actions, queryParams, selectors } = parseSlices(slices);
-	return createQueryParamSubscriptions(
-		zustand(
-			subscribeWithSelector(
-				immer(
-					devtools(
-						apiSelectors(
-							apiQueryParams(
-								apiActions(() => initialState, actions),
-								queryParams
-							),
-							selectors
-						),
-						{
-							trace: true,
-							features: {
-								pause: true,
-								lock: true,
-								jump: true,
-								skip: true,
-							},
-						}
-					)
-				)
-			)
-		)
-	);
+	return pipe(
+		createQueryParamSubscriptions,
+		zustand,
+		subscribeWithSelector,
+		immer,
+		devtools,
+		(config) => apiSelectors(config, selectors),
+		(config) => apiQueryParams(config, queryParams),
+		(config) => apiActions(config, actions)
+	)(() => initialState);
 };
 
 export default createStore;
